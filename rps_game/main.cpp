@@ -19,7 +19,7 @@
 
 #include <iostream>
 #include <algorithm>
-
+#include <ctime>
 /*!
  * \brief The Level enum
  */
@@ -30,6 +30,16 @@ enum Level
     NORMAL,
     HARD
 };
+/*!
+ * \brief The Figure enum
+ */
+enum Figure
+{
+    UNDEF = 0,
+    ROCK,
+    PAPER,
+    SCISSORS
+};
 
 const std::string cArgKeyLevel = "--level";
 const std::string cArgKeyVersion = "--version";
@@ -37,6 +47,14 @@ const std::string cArgKeyVersion = "--version";
 const std::string cLevelStringEasy = "easy";
 const std::string cLevelStringNormal = "normal";
 const std::string cLevelStringHard = "hard";
+
+const std::string cFigureStringRock = "rock";
+const std::string cFigureStringPaper = "paper";
+const std::string cFigureStringScissors = "scissors";
+
+const std::string cVersionDescription = "Version 2.0. Short description.";
+
+const std::string cErrorMessage = "Error. Wrong input.";
 
 /*!
  * \brief showHelp
@@ -76,6 +94,33 @@ Level parseLevel(std::string levelString)
     }
 
     return rLevel;
+}
+
+/*!
+ * \brief parseFigure
+ * \param figureString
+ * \return
+ */
+Figure parseFigure(std::string figureString)
+{
+    Figure rFigure = UNDEF;
+
+    std::transform(figureString.begin(), figureString.end(), figureString.begin(), ::tolower);
+
+    if (cFigureStringRock == figureString)
+    {
+        rFigure = ROCK;
+    }
+    else if (cFigureStringPaper == figureString)
+    {
+        rFigure = PAPER;
+    }
+    else if (cFigureStringScissors == figureString)
+    {
+        rFigure = SCISSORS;
+    }
+
+    return rFigure;
 }
 
 /*!
@@ -128,6 +173,226 @@ std::string stringArg(int argc, char* argv[], std::string argName)
 }
 
 /*!
+ * \brief isVersion
+ * \param argc
+ * \param argv
+ * \param argName
+ * \return
+ */
+bool isVersion(int argc, char **argv, std::string argName)
+{
+    for(int i = 1; i < argc; i++)
+    {
+        if(argv[i] == argName)
+        {
+            std::cout << cVersionDescription << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
+
+/*!
+ * \brief isValid
+ * \param argc
+ * \param argv
+ * \return
+ */
+bool isValid(int argc, char **argv)
+{
+    for(int i = 1; i < argc; i++)
+    {
+        std::string nextArg = argv[i];
+        std::transform(nextArg.begin(), nextArg.end(), nextArg.begin(), ::tolower);
+        if((nextArg == cArgKeyLevel) || (nextArg == cArgKeyVersion) || (nextArg == cLevelStringEasy)
+            || (nextArg == cLevelStringNormal) || (nextArg == cLevelStringHard))
+            continue;
+        else
+        {
+            std::cout << cErrorMessage << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+/*!
+ * \brief getFigure
+ * \return
+ */
+Figure getFigure() {
+    std::string choice;
+    std::cout << "Put figure:" << std::endl;
+    std::cin >> choice;
+    return parseFigure(choice);
+}
+
+/*!
+ * \brief getRandomFig
+ * \return
+ */
+Figure getRandomFig() {
+    return static_cast<Figure>(rand()%3 + 1);
+    }
+
+/*!
+ * \brief getRandomFig
+ * \param userFig
+ * \param randFig
+ * \return
+ */
+int userWin(Figure userFig, Figure randFig){
+    if (userFig == randFig)
+        return 0;
+    switch(userFig) {
+        case ROCK:
+            if(randFig == PAPER)
+                return -1;
+            if(randFig == SCISSORS)
+                return 1;
+            break;
+        case PAPER:
+            if(randFig == ROCK)
+                return 1;
+            if(randFig == SCISSORS)
+                return -1;
+            break;
+        case SCISSORS:
+            if(randFig == PAPER)
+                return 1;
+            if(randFig == ROCK)
+                return -1;
+            break;
+    }
+}
+
+/*!
+ * \brief showFigure
+ * \param figure
+ * \return
+ */
+void showFigure(Figure figure)
+{
+    if (figure == ROCK)
+        std::cout << cFigureStringRock << std::endl;
+    else if (figure == PAPER)
+        std::cout << cFigureStringPaper << std::endl;
+    else if (figure == SCISSORS)
+        std::cout << cFigureStringScissors << std::endl;
+}
+
+/*!
+ * \brief gameResult
+ * \param result
+ * \return
+ */
+void gameResult(int result)
+{
+    if(result == 0)
+        std::cout << "Draw." << std::endl;
+    else if(result == 1)
+        std::cout << "Winner." << std::endl;
+    else if(result == -1)
+        std::cout << "Loser." << std::endl;
+}
+
+/*!
+ * \brief easyLevel
+ * \return
+ */
+void easyLevel()
+{
+    static int i = 1;
+    Figure figure = getFigure();
+    if(figure == UNDEF)
+    {
+        std::cout << "Wrong figure." << std::endl;
+        return;
+    }
+    if(i % 2 == 0)
+        switch(figure)
+        {
+            case ROCK:
+                showFigure(SCISSORS);
+                gameResult(1);
+                break;
+            case PAPER:
+                showFigure(ROCK);
+                gameResult(1);
+                break;
+            case SCISSORS:
+                showFigure(PAPER);
+                gameResult(1);
+                break;
+        }
+    else
+    {
+        Figure randomFig = getRandomFig();
+        showFigure(randomFig);
+        int result = userWin(figure, randomFig);
+        gameResult(result);
+    }
+    i++;
+}
+
+/*!
+ * \brief normalLevel
+ * \return
+ */
+void normalLevel()
+{
+    Figure figure = getFigure();
+    if(figure == UNDEF)
+    {
+        std::cout << "Wrong figure." << std::endl;
+        return;
+    }
+    Figure randomFig = getRandomFig();
+    showFigure(randomFig);
+    int result = userWin(figure, randomFig);
+    gameResult(result);
+}
+
+/*!
+ * \brief hardLevel
+ * \return
+ */
+void hardLevel()
+{
+    static int i = 1;
+    Figure figure = getFigure();
+    if(figure == UNDEF)
+    {
+        std::cout << "Wrong figure." << std::endl;
+        return;
+    }
+    if(i % 2 == 0)
+        switch(figure)
+        {
+            case ROCK:
+                showFigure(PAPER);
+                gameResult(-1);
+                break;
+            case PAPER:
+                showFigure(SCISSORS);
+                gameResult(-1);
+                break;
+            case SCISSORS:
+                showFigure(ROCK);
+                gameResult(-1);
+                break;
+        }
+    else
+    {
+        Figure randomFig = getRandomFig();
+        showFigure(randomFig);
+        int result = userWin(figure, randomFig);
+        gameResult(result);
+    }
+    i++;
+}
+
+/*!
  * \brief main
  * \param argc
  * \param argv
@@ -135,30 +400,45 @@ std::string stringArg(int argc, char* argv[], std::string argName)
  */
 int main(int argc, char* argv[])
 {
-    if (argc == 1)
+    srand(time(0));
+    char answer = 'y';
+    while (tolower(answer) == 'y')
     {
-        showHelp();
-        return 1;
+        if (argc == 1)
+        {
+            showHelp();
+            return 1;
+        }
+        // Checking for valid input
+        if(!isValid(argc, argv))
+        {
+            showHelp();
+            return 1;
+        }
+        // Search for --version
+        if(isVersion(argc, argv, cArgKeyVersion))
+            return 0;
+        // Parse level
+        Level level = UNSPECIFIED;
+
+        std::string levelStr = stringArg(argc, argv, cArgKeyLevel);
+        if (!levelStr.empty())
+        {
+            level = parseLevel(levelStr);
+        }
+        if (level == EASY)
+            easyLevel();
+        else if (level == NORMAL)
+            normalLevel();
+        else if (level == HARD)
+            hardLevel();
+        else if (level == UNSPECIFIED)
+        {
+            showHelp();
+            return 1;
+        }
+        std::cout << "One more? (Y/N)" << std::endl;
+        std::cin >> answer;
     }
-
-    // Parse level
-    Level level = UNSPECIFIED;
-
-    std::string levelStr = stringArg(argc, argv, cArgKeyLevel);
-    if (!levelStr.empty())
-    {
-        level = parseLevel(levelStr);
-    }
-
-    if (UNSPECIFIED == level)
-    {
-        showHelp();
-        return 1;
-    }
-
-    std::cout << level << std::endl;
-
     return 0;
 }
-
-
